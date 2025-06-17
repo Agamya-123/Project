@@ -61,7 +61,7 @@
             </td>
             <td>
               <span v-if="!row.editing">{{ row.description }}</span>
-              <input v-else type="text" v-model="row.description" />
+              <input v-else type="text" v-model="row.description" placeholder="Enter description" />
             </td>
             <td>
               <button v-if="!row.editing" @click="startEditing(index)" style="margin-right: 8px;">Edit</button>
@@ -226,4 +226,14 @@ input[type="number"] {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 </style>
