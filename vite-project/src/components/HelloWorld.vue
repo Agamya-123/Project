@@ -109,6 +109,11 @@ const saveRow = (index) => {
     alert('Please enter a valid 6-digit pincode.');
     return;
   }
+  
+  if (!row.applicationId){
+    alert('Application ID cannot be empty.');
+    return;
+  }
 
   if (row.ruleType === 'MIN_ORDER_VALUE') {
     const val = row.value;
