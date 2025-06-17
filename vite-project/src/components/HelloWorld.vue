@@ -4,11 +4,9 @@
       <div class="loader"></div>
       <p style="color: black; font-weight: 500;">Loading...</p>
     </div>
-
     <div class="header">
       <span class="heading">Pincode Management</span>
     </div>
-
     <div class="table-wrapper">
       <table class="pincode-table">
         <thead>
@@ -73,11 +71,44 @@
         <tfoot>
           <tr>
             <td colspan="7">
-              <button @click="addNewRow">Add New Pincode</button>
+              <button @click="openModal">Add New Pincode</button>
             </td>
           </tr>
         </tfoot>
       </table>
+    </div>
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Add New Pincode</h3>
+
+        <input type="text" v-model="newRow.pincode" placeholder="Enter Pincode" @input="enforceNumeric(newRow)" />
+        <small v-if="!isValidPincode(newRow.pincode)" style="color:red">Invalid pincode</small>
+
+        <input type="text" v-model="newRow.applicationId" placeholder="Application ID" />
+
+        <select v-model="newRow.status">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+
+        <select v-model="newRow.ruleType">
+          <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
+          <option value="AFTER_SALES_SERVICEABILITY">AFTER_SALES_SERVICEABILITY</option>
+        </select>
+
+        <div>
+          <input v-if="newRow.ruleType === 'MIN_ORDER_VALUE'" type="number" v-model.number="newRow.value" placeholder="Value" />
+          <select v-else v-model="newRow.value">
+            <option :value="true">True</option>
+            <option :value="false">False</option>
+          </select>
+        </div>
+
+        <input type="text" v-model="newRow.description" placeholder="Description" />
+
+        <button @click="saveNewRow">Save</button>
+        <button @click="showModal = false">Cancel</button>
+      </div>
     </div>
   </div>
 </template>
@@ -87,6 +118,55 @@ import { reactive, ref } from 'vue';
 
 const fullData = reactive([]);
 const showLoader = ref(false);
+const showModal = ref(false);
+const newRow = reactive({
+  pincode: '',
+  applicationId: '',
+  status: 'Active',
+  ruleType: 'MIN_ORDER_VALUE',
+  value: 0,
+  description: '',
+});
+
+const openModal = () => {
+  Object.assign(newRow, {
+    pincode: '',
+    applicationId: '',
+    status: 'Active',
+    ruleType: 'MIN_ORDER_VALUE',
+    value: 0,
+    description: '',
+  });
+  showModal.value = true;
+};
+
+const saveNewRow = async () => {
+  if (!isValidPincode(newRow.pincode)) {
+    alert('Invalid pincode');
+    return;
+  }
+
+  if (!newRow.applicationId) {
+    alert('Application ID required');
+    return;
+  }
+
+  if (newRow.ruleType === 'MIN_ORDER_VALUE' && (!Number.isInteger(newRow.value) || newRow.value < -2147483648 || newRow.value > 2147483647)) {
+    alert('Invalid value for MIN_ORDER_VALUE');
+    return;
+  }
+
+  if (newRow.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof newRow.value !== 'boolean') {
+    alert('Value must be true/false');
+    return;
+  }
+
+  showLoader.value = true;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  fullData.push({ ...newRow, editing: false });
+  showLoader.value = false;
+  showModal.value = false;
+};
 
 const isValidPincode = (value) => {
   const pin = String(value).trim();
@@ -128,7 +208,7 @@ const saveRow = async (index) => {
   }
 
   showLoader.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 1000)); 
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   showLoader.value = false;
 
   row.editing = false;
@@ -142,7 +222,7 @@ const deleteRow = (index) => {
 
 const addNewRow = async () => {
   showLoader.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 700)); 
+  await new Promise((resolve) => setTimeout(resolve, 700));
   fullData.push({
     pincode: '',
     status: '',
@@ -198,6 +278,7 @@ input[type="number"] {
   width: 100%;
   box-sizing: border-box;
 }
+
 .loader-overlay {
   position: fixed;
   top: 0;
@@ -236,4 +317,24 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 </style>
