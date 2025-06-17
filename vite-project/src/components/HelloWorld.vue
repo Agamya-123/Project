@@ -10,6 +10,7 @@
         <thead>
           <tr>
             <th>Pincode</th>
+            <th>Application ID</th>
             <th>Status</th>
             <th>Rule Type</th>
             <th>Value</th>
@@ -27,6 +28,10 @@
                   Invalid pincode
                 </small>
               </div>
+            </td>
+            <td>
+              <span v-if="!row.editing">{{ row.applicationId || 'N/A' }}</span>
+              <input v-else type="text" v-model="row.applicationId" placeholder="Enter Application ID"/>
             </td>
             <td>
               <span v-if="!row.editing">{{ row.status }}</span>
@@ -67,7 +72,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <button @click="addNewRow">Add New Pincode</button>
             </td>
           </tr>
