@@ -2,7 +2,7 @@
   <div>
     <div v-if="showLoader" class="loader-overlay">
       <div class="loader"></div>
-      <p>Loading...</p>
+      <p style="color: black; font-weight: 500;">Loading...</p>
     </div>
 
     <div class="header">
