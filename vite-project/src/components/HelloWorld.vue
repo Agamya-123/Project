@@ -1,6 +1,10 @@
 <template>
-
   <div>
+    <div v-if="showLoader" class="loader-overlay">
+      <div class="loader"></div>
+      <p>Loading...</p>
+    </div>
+
     <div class="header">
       <span class="heading">Pincode Management</span>
     </div>
@@ -23,15 +27,13 @@
             <td>
               <span v-if="!row.editing">{{ row.pincode }}</span>
               <div v-else>
-                <input type="text" v-model="row.pincode" maxlength="6" placeholder="Enter Pincode" @input="enforceNumeric(row)"/>
-                <small v-if="!isValidPincode(row.pincode)" style="color: red;">
-                  Invalid pincode
-                </small>
+                <input type="text" v-model="row.pincode" maxlength="6" placeholder="Enter Pincode" @input="enforceNumeric(row)" />
+                <small v-if="!isValidPincode(row.pincode)" style="color: red;">Invalid pincode</small>
               </div>
             </td>
             <td>
               <span v-if="!row.editing">{{ row.applicationId || 'N/A' }}</span>
-              <input v-else type="text" v-model="row.applicationId" placeholder="Enter Application ID"/>
+              <input v-else type="text" v-model="row.applicationId" placeholder="Enter Application ID" />
             </td>
             <td>
               <span v-if="!row.editing">{{ row.status }}</span>
@@ -54,15 +56,13 @@
                   <option :value="true">True</option>
                   <option :value="false">False</option>
                 </select>
-                <input v-else type="number" :min="-2147483648" :max="2147483647" v-model.number="row.value" placeholder="Enter value"/>
+                <input v-else type="number" :min="-2147483648" :max="2147483647" v-model.number="row.value" placeholder="Enter value" />
               </template>
             </td>
-
             <td>
               <span v-if="!row.editing">{{ row.description }}</span>
               <input v-else type="text" v-model="row.description" />
             </td>
-
             <td>
               <button v-if="!row.editing" @click="startEditing(index)" style="margin-right: 8px;">Edit</button>
               <button v-else @click="saveRow(index)" style="margin-right: 8px;">Save</button>
@@ -83,11 +83,10 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue';
 
-const fullData = reactive([
-
-]);
+const fullData = reactive([]);
+const showLoader = ref(false);
 
 const isValidPincode = (value) => {
   const pin = String(value).trim();
@@ -95,22 +94,22 @@ const isValidPincode = (value) => {
 };
 
 const enforceNumeric = (row) => {
-  row.pincode = row.pincode.replace(/\D/g, '').slice(0,6);
+  row.pincode = row.pincode.replace(/\D/g, '').slice(0, 6);
 };
 
 const startEditing = (index) => {
   fullData[index].editing = true;
 };
 
-const saveRow = (index) => {
+const saveRow = async (index) => {
   const row = fullData[index];
 
   if (!isValidPincode(row.pincode)) {
     alert('Please enter a valid 6-digit pincode.');
     return;
   }
-  
-  if (!row.applicationId){
+
+  if (!row.applicationId) {
     alert('Application ID cannot be empty.');
     return;
   }
@@ -128,6 +127,10 @@ const saveRow = (index) => {
     return;
   }
 
+  showLoader.value = true;
+  await new Promise((resolve) => setTimeout(resolve, 1000)); 
+  showLoader.value = false;
+
   row.editing = false;
 };
 
@@ -137,7 +140,9 @@ const deleteRow = (index) => {
   }
 };
 
-const addNewRow = () => {
+const addNewRow = async () => {
+  showLoader.value = true;
+  await new Promise((resolve) => setTimeout(resolve, 700)); 
   fullData.push({
     pincode: '',
     status: '',
@@ -146,6 +151,7 @@ const addNewRow = () => {
     description: '',
     editing: true,
   });
+  showLoader.value = false;
 };
 </script>
 
@@ -191,5 +197,33 @@ input[type="number"] {
   border: 1px solid #ccc;
   width: 100%;
   box-sizing: border-box;
+}
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.75);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+}
+
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #333;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 0.9s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
