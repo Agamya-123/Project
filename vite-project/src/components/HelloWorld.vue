@@ -4,13 +4,11 @@
       <div class="loader"></div>
       <p style="color: black; font-weight: 500;">Loading...</p>
     </div>
-
     <div class="header">
       <span class="heading">Pincode Management</span>
       <button class="primary-button" @click="openModal">Add New Pincode</button>
     </div>
-
-    <div class="table-wrapper">
+    <div class="wrapper">
       <table class="pincode-table">
         <thead>
           <tr>
@@ -46,14 +44,14 @@
             <td>
               <span v-if="!row.editing">{{ row.ruleType }}</span>
               <select v-else v-model="row.ruleType">
-                <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
-                <option value="AFTER_SALES_SERVICEABILITY">AFTER_SALES_SERVICEABILITY</option>
+                <option value="MIN ORDER VALUE">MIN ORDER VALUE</option>
+                <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
               </select>
             </td>
             <td>
               <span v-if="!row.editing">{{ row.value }}</span>
               <template v-else>
-                <select v-if="row.ruleType === 'AFTER_SALES_SERVICEABILITY'" v-model="row.value">
+                <select v-if="row.ruleType === 'AFTER SALES SERVICEABILITY'" v-model="row.value">
                   <option :value="true">True</option>
                   <option :value="false">False</option>
                 </select>
@@ -75,36 +73,29 @@
         </tbody>
       </table>
     </div>
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
+    <div v-if="showModal" class="app-pin-overlay">
+      <div class="add-pin-content">
         <h3>Add New Pincode</h3>
-
         <input type="text" v-model="newRow.pincode" placeholder="Enter Pincode" @input="enforceNumeric(newRow)" />
         <small v-if="!isValidPincode(newRow.pincode)" class="error">Invalid pincode</small>
-
         <input type="text" v-model="newRow.applicationId" placeholder="Application ID" />
-
         <select v-model="newRow.status">
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
         </select>
-
         <select v-model="newRow.ruleType">
-          <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
-          <option value="AFTER_SALES_SERVICEABILITY">AFTER_SALES_SERVICEABILITY</option>
+          <option value="MIN ORDER VALUE">MIN ORDER VALUE</option>
+          <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
         </select>
-
         <div class="field-wrapper">
-          <input v-if="newRow.ruleType === 'MIN_ORDER_VALUE'" type="number" v-model.number="newRow.value" placeholder="Enter Value" />
+          <input v-if="newRow.ruleType === 'MIN ORDER VALUE'" type="number" v-model.number="newRow.value" placeholder="Enter Value" />
           <select v-else v-model="newRow.value">
             <option :value="true">True</option>
             <option :value="false">False</option>
           </select>
         </div>
-
         <input type="text" v-model="newRow.description" placeholder="Description" />
-
-        <div class="modal-footer">
+        <div class="app-pin-footer">
           <button class="primary-button" @click="saveNewRow">Save</button>
           <button class="cancel-button" @click="showModal = false">Cancel</button>
         </div>
@@ -115,11 +106,9 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-
 const fullData = reactive([]);
 const showLoader = ref(false);
 const showModal = ref(false);
-
 const newRow = reactive({
   pincode: '',
   applicationId: '',
@@ -128,7 +117,6 @@ const newRow = reactive({
   value: 0,
   description: '',
 });
-
 const openModal = () => {
   Object.assign(newRow, {
     pincode: '',
@@ -140,48 +128,39 @@ const openModal = () => {
   });
   showModal.value = true;
 };
-
 const saveNewRow = async () => {
   if (!isValidPincode(newRow.pincode)) {
     alert('Invalid pincode');
     return;
   }
-
   if (!newRow.applicationId) {
     alert('Application ID required');
     return;
   }
-
-  if (newRow.ruleType === 'MIN_ORDER_VALUE' && (!Number.isInteger(newRow.value) || newRow.value < -2147483648 || newRow.value > 2147483647)) {
-    alert('Invalid value for MIN_ORDER_VALUE');
+  if (newRow.ruleType === 'MIN ORDER VALUE' && (!Number.isInteger(newRow.value) || newRow.value < -2147483648 || newRow.value > 2147483647)) {
+    alert('Invalid value for MIN ORDER VALUE');
     return;
   }
-
-  if (newRow.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof newRow.value !== 'boolean') {
+  if (newRow.ruleType === 'AFTER SALES SERVICEABILITY' && typeof newRow.value !== 'boolean') {
     alert('Value must be true/false');
     return;
   }
-
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
   fullData.push({ ...newRow, editing: false });
   showLoader.value = false;
   showModal.value = false;
 };
-
 const isValidPincode = (value) => {
   const pin = String(value).trim();
   return /^\d{6}$/.test(pin) && Number(pin) >= 100000 && Number(pin) <= 999999;
 };
-
 const enforceNumeric = (row) => {
   row.pincode = row.pincode.replace(/\D/g, '').slice(0, 6);
 };
-
 const startEditing = (index) => {
   fullData[index].editing = true;
 };
-
 const saveRow = async (index) => {
   const row = fullData[index];
 
@@ -189,12 +168,10 @@ const saveRow = async (index) => {
     alert('Please enter a valid 6-digit pincode.');
     return;
   }
-
   if (!row.applicationId) {
     alert('Application ID cannot be empty.');
     return;
   }
-
   if (row.ruleType === 'MIN_ORDER_VALUE') {
     const val = row.value;
     if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
@@ -202,19 +179,15 @@ const saveRow = async (index) => {
       return;
     }
   }
-
   if (row.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof row.value !== 'boolean') {
     alert('Value must be true or false');
     return;
   }
-
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
   showLoader.value = false;
-
   row.editing = false;
 };
-
 const deleteRow = (index) => {
   if (confirm(`Are you sure you want to delete this pincode?`)) {
     fullData.splice(index, 1);
@@ -224,8 +197,7 @@ const deleteRow = (index) => {
 
 <style scoped>
 body {
-
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Arial', sans-serif;
 }
 
 .header {
@@ -257,7 +229,7 @@ body {
   opacity: 0.9;
 }
 
-.table-wrapper {
+.wrapper {
   margin-top: 20px;
   overflow-x: auto;
 }
@@ -265,16 +237,16 @@ body {
 .pincode-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
+  background-color:black;
 }
 
 th,
 td {
   padding: 16px;
   text-align: left;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid black;
   font-size: 15px;
-  color: #000;
+  color: white;
 }
 
 th {
@@ -310,7 +282,7 @@ select {
 }
 
 .edit-btn {
-  background-color: #ffca28;
+  background-color: #2196f3;
   color: #212121;
 }
 
@@ -324,7 +296,7 @@ select {
   color: white;
 }
 
-.modal-overlay {
+.app-pin-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -338,7 +310,7 @@ select {
   padding: 16px;
 }
 
-.modal-content {
+.add-pin-content {
   background: #ffffff;
   padding: 30px;
   border-radius: 12px;
@@ -350,7 +322,7 @@ select {
   gap: 16px;
 }
 
-.modal-content h3 {
+.add-pin-content h3 {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 16px;
@@ -358,7 +330,7 @@ select {
   color: #184658;
 }
 
-.modal-footer {
+.app-pin-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -407,4 +379,13 @@ select {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
 </style>
