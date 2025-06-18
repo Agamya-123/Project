@@ -73,8 +73,8 @@
         </tbody>
       </table>
     </div>
-    <div v-if="showModal" class="app-pin-overlay">
-      <div class="add-pin-content">
+    <div v-if="showModal" class="add-pin-overlay" @click="handleOverlayClick">
+      <div class="add-pin-content" @click.stop>
         <h3>Add New Pincode</h3>
         <input type="text" v-model="newRow.pincode" placeholder="Enter Pincode" @input="enforceNumeric(newRow)" />
         <small v-if="!isValidPincode(newRow.pincode)" class="error">Invalid pincode</small>
@@ -193,6 +193,9 @@ const deleteRow = (index) => {
     fullData.splice(index, 1);
   }
 };
+const handleOverlayClick = () => {
+  showModal.value = false;
+};
 </script>
 
 <style scoped>
@@ -296,7 +299,7 @@ select {
   color: white;
 }
 
-.app-pin-overlay {
+.add-pin-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -328,6 +331,9 @@ select {
   margin-bottom: 16px;
   text-align: center;
   color: #184658;
+}
+.add-pin-content .error{
+  text-align: left;
 }
 
 .app-pin-footer {
@@ -387,5 +393,4 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
 }
-
 </style>
