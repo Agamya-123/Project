@@ -49,13 +49,21 @@
               </select>
             </td>
             <td>
-              <span v-if="!row.editing">{{ row.value }}</span>
+              <span v-if="!row.editing">
+                <template v-if="row.ruleType === 'MIN ORDER VALUE'">
+                  ₹{{ row.value?.minOrderValue !== undefined && row.value?.minOrderValue !== null ? row.value.minOrderValue : 'N/A' }}
+
+                </template>
+                <template v-else>
+                  {{ row.value === true ? 'True' : row.value === false ? 'False' : 'N/A' }}
+                </template>
+              </span>
               <template v-else>
                 <select v-if="row.ruleType === 'AFTER SALES SERVICEABILITY'" v-model="row.value">
                   <option :value="true">True</option>
                   <option :value="false">False</option>
                 </select>
-                <input v-else type="number" :min="-2147483648" :max="2147483647" v-model.number="row.value" placeholder="Enter value" />
+                <input v-else type="number" :min="-2147483648" :max="2147483647" v-model.number="row.value.minOrderValue" placeholder="Enter value" />
               </template>
             </td>
             <td>
@@ -73,6 +81,7 @@
         </tbody>
       </table>
     </div>
+
     <div v-if="showModal" class="add-pin-overlay" @click="handleOverlayClick">
       <div class="add-pin-content" @click.stop>
         <h3>Add New Pincode</h3>
@@ -88,7 +97,7 @@
           <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
         </select>
         <div class="field-wrapper">
-          <input v-if="newRow.ruleType === 'MIN ORDER VALUE'" type="number" v-model.number="newRow.value" placeholder="Enter Value" />
+          <input v-if="newRow.ruleType === 'MIN ORDER VALUE'" type="number" v-model.number="newRow.value.minOrderValue" placeholder="Enter Value" />
           <select v-else v-model="newRow.value">
             <option :value="true">True</option>
             <option :value="false">False</option>
@@ -105,29 +114,71 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, toRaw } from 'vue';
+import axios from 'axios';
+
+
 const fullData = reactive([]);
 const showLoader = ref(false);
 const showModal = ref(false);
+
 const newRow = reactive({
   pincode: '',
   applicationId: '',
   status: '',
   ruleType: '',
-  value: 0,
+  value: {},
   description: '',
 });
+
 const openModal = () => {
   Object.assign(newRow, {
     pincode: '',
     applicationId: '',
     status: '',
     ruleType: '',
-    value: 0,
+    value: {},
     description: '',
   });
   showModal.value = true;
 };
+
+onMounted(async () => {
+  showLoader.value = true;
+  try {
+    const resp = await axios.get('/api/v1/checkoutrules', {
+      params: { pincode: '457777' },
+      headers: {
+        'x-application-data': JSON.stringify({
+          company_id: '17',
+          _id: '65f437fae78851028707daee',
+          applicationId: '65f437fae78851028707daee'
+        })
+      }
+    });
+
+    const normalizedData = resp.data.map(item => ({
+      ...item,
+      status: item.isActive ? 'Active' : 'Inactive', // ← Normalize status
+      value: item.ruleType === 'MIN ORDER VALUE'
+        ? { minOrderValue: item.value?.minOrderValue ?? null }
+        : typeof item.value === 'boolean' ? item.value : null,
+      description: item.message ?? '', // ← Map description from message
+      editing: false
+    }));
+
+    fullData.splice(0, fullData.length, ...normalizedData);
+
+  } catch (e) {
+    console.error('Fetch failed', e);
+  } finally {
+    showLoader.value = false;
+  }
+});
+
+
+
+
 const saveNewRow = async () => {
   if (!isValidPincode(newRow.pincode)) {
     alert('Invalid pincode');
@@ -137,33 +188,46 @@ const saveNewRow = async () => {
     alert('Application ID required');
     return;
   }
-  if (newRow.ruleType === 'MIN ORDER VALUE' && (!Number.isInteger(newRow.value) || newRow.value < -2147483648 || newRow.value > 2147483647)) {
-    alert('Invalid value for MIN ORDER VALUE');
-    return;
+  if (newRow.ruleType === 'MIN ORDER VALUE') {
+    const val = newRow.value.minOrderValue;
+    if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
+      alert('Invalid value for MIN ORDER VALUE');
+      return;
+    }
   }
   if (newRow.ruleType === 'AFTER SALES SERVICEABILITY' && typeof newRow.value !== 'boolean') {
     alert('Value must be true/false');
     return;
   }
+
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  fullData.push({ ...newRow, editing: false });
+  fullData.push({ ...JSON.parse(JSON.stringify(newRow)), editing: false });
   showLoader.value = false;
   showModal.value = false;
 };
+
 const isValidPincode = (value) => {
   const pin = String(value).trim();
   return /^\d{6}$/.test(pin) && Number(pin) >= 100000 && Number(pin) <= 999999;
 };
+
 const enforceNumeric = (row) => {
   row.pincode = row.pincode.replace(/\D/g, '').slice(0, 6);
 };
+
 const startEditing = (index) => {
-  fullData[index].editing = true;
+  const row = fullData[index];
+  if (row.ruleType === 'MIN ORDER VALUE') {
+    if (typeof row.value !== 'object' || !row.value.minOrderValue) {
+      row.value = { minOrderValue: 0 };
+    }
+  }
+  row.editing = true;
 };
+
 const saveRow = async (index) => {
   const row = fullData[index];
-
   if (!isValidPincode(row.pincode)) {
     alert('Please enter a valid 6-digit pincode.');
     return;
@@ -172,27 +236,30 @@ const saveRow = async (index) => {
     alert('Application ID cannot be empty.');
     return;
   }
-  if (row.ruleType === 'MIN_ORDER_VALUE') {
-    const val = row.value;
+  if (row.ruleType === 'MIN ORDER VALUE') {
+    const val = row.value?.minOrderValue;
     if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
       alert('Value must be a 32-bit integer');
       return;
     }
   }
-  if (row.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof row.value !== 'boolean') {
+  if (row.ruleType === 'AFTER SALES SERVICEABILITY' && typeof row.value !== 'boolean') {
     alert('Value must be true or false');
     return;
   }
+
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  showLoader.value = false;
   row.editing = false;
+  showLoader.value = false;
 };
+
 const deleteRow = (index) => {
   if (confirm(`Are you sure you want to delete this pincode?`)) {
     fullData.splice(index, 1);
   }
 };
+
 const handleOverlayClick = () => {
   showModal.value = false;
 };
@@ -202,7 +269,6 @@ const handleOverlayClick = () => {
 body {
   font-family: 'Arial', sans-serif;
 }
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -210,13 +276,11 @@ body {
   margin-top: 16px;
   padding: 0 8px;
 }
-
 .heading {
   font-size: 28px;
   font-weight: 800;
   color: rgb(223, 223, 223);
 }
-
 .primary-button {
   background: linear-gradient(135deg, #184658, #286f8a);
   color: white;
@@ -227,38 +291,29 @@ body {
   cursor: pointer;
   transition: 0.3s ease;
 }
-
 .primary-button:hover {
   opacity: 0.9;
 }
-
 .wrapper {
   margin-top: 20px;
   overflow-x: auto;
 }
-
 .pincode-table {
   width: 100%;
   border-collapse: collapse;
-  background-color:black;
+  background-color: black;
 }
-
-th,
-td {
+th, td {
   padding: 16px;
   text-align: left;
   border-bottom: 1px solid black;
   font-size: 15px;
   color: white;
 }
-
 th {
   background-color: #184658;
-  color: white;
 }
-
-input,
-select {
+input, select {
   width: 100%;
   padding: 12px;
   font-size: 15px;
@@ -268,43 +323,33 @@ select {
   background-color: #f9f9f9;
   color: #000;
 }
-
 .action-buttons {
   display: flex;
   gap: 6px;
 }
-
-.edit-btn,
-.save-btn,
-.delete-btn {
+.edit-btn, .save-btn, .delete-btn {
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
 }
-
 .edit-btn {
   background-color: #2196f3;
   color: #212121;
 }
-
 .save-btn {
   background-color: #4caf50;
   color: white;
 }
-
 .delete-btn {
   background-color: #f44336;
   color: white;
 }
-
 .add-pin-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
@@ -312,7 +357,6 @@ select {
   z-index: 1000;
   padding: 16px;
 }
-
 .add-pin-content {
   background: #ffffff;
   padding: 30px;
@@ -324,7 +368,6 @@ select {
   flex-direction: column;
   gap: 16px;
 }
-
 .add-pin-content h3 {
   font-size: 24px;
   font-weight: bold;
@@ -332,17 +375,12 @@ select {
   text-align: center;
   color: #184658;
 }
-.add-pin-content .error{
-  text-align: left;
-}
-
 .app-pin-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 8px;
 }
-
 .cancel-button {
   background-color: #dee2e6;
   color: #212529;
@@ -352,13 +390,11 @@ select {
   padding: 10px 14px;
   cursor: pointer;
 }
-
 .error {
   color: red;
   font-size: 13px;
   margin-top: 4px;
 }
-
 .loader-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -370,7 +406,6 @@ select {
   align-items: center;
   z-index: 999;
 }
-
 .loader {
   border: 6px solid #f3f3f3;
   border-top: 6px solid #184658;
@@ -380,7 +415,6 @@ select {
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
