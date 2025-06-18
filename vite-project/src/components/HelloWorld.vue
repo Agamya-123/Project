@@ -44,15 +44,14 @@
             <td>
               <span v-if="!row.editing">{{ row.ruleType }}</span>
               <select v-else v-model="row.ruleType">
-                <option value="MIN ORDER VALUE">MIN ORDER VALUE</option>
+                <option value="MIN_ORDER_VALUE">MIN ORDER VALUE</option>
                 <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
               </select>
             </td>
             <td>
               <span v-if="!row.editing">
-                <template v-if="row.ruleType === 'MIN ORDER VALUE'">
+                <template v-if="row.ruleType === 'MIN_ORDER_VALUE'">
                   ₹{{ row.value?.minOrderValue !== undefined && row.value?.minOrderValue !== null ? row.value.minOrderValue : 'N/A' }}
-
                 </template>
                 <template v-else>
                   {{ row.value === true ? 'True' : row.value === false ? 'False' : 'N/A' }}
@@ -93,11 +92,11 @@
           <option value="Inactive">Inactive</option>
         </select>
         <select v-model="newRow.ruleType">
-          <option value="MIN ORDER VALUE">MIN ORDER VALUE</option>
+          <option value="MIN_ORDER_VALUE">MIN ORDER VALUE</option>
           <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
         </select>
         <div class="field-wrapper">
-          <input v-if="newRow.ruleType === 'MIN ORDER VALUE'" type="number" v-model.number="newRow.value.minOrderValue" placeholder="Enter Value" />
+          <input v-if="newRow.ruleType === 'MIN_ORDER_VALUE'" type="number" v-model.number="newRow.value.minOrderValue" placeholder="Enter Value" />
           <select v-else v-model="newRow.value">
             <option :value="true">True</option>
             <option :value="false">False</option>
@@ -114,15 +113,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
-
-const fullData = reactive([]);
+const fullData = ref([]);
 const showLoader = ref(false);
 const showModal = ref(false);
 
-const newRow = reactive({
+const newRow = ref({
   pincode: '',
   applicationId: '',
   status: '',
@@ -132,7 +130,7 @@ const newRow = reactive({
 });
 
 const openModal = () => {
-  Object.assign(newRow, {
+  Object.assign(newRow.value, {
     pincode: '',
     applicationId: '',
     status: '',
@@ -159,53 +157,22 @@ onMounted(async () => {
 
     const normalizedData = resp.data.map(item => ({
       ...item,
-      status: item.isActive ? 'Active' : 'Inactive', // ← Normalize status
-      value: item.ruleType === 'MIN ORDER VALUE'
+      status: item.isActive ? 'Active' : 'Inactive',
+      value: item.ruleType === 'MIN_ORDER_VALUE'
         ? { minOrderValue: item.value?.minOrderValue ?? null }
         : typeof item.value === 'boolean' ? item.value : null,
-      description: item.message ?? '', // ← Map description from message
-      editing: false
+        ruleType: item.ruleType?.trim().toUpperCase(),
+      description: item.message ?? '',
+      editing: false,
     }));
 
-    fullData.splice(0, fullData.length, ...normalizedData);
-
+    fullData.value = normalizedData;
   } catch (e) {
     console.error('Fetch failed', e);
   } finally {
     showLoader.value = false;
   }
 });
-
-
-
-
-const saveNewRow = async () => {
-  if (!isValidPincode(newRow.pincode)) {
-    alert('Invalid pincode');
-    return;
-  }
-  if (!newRow.applicationId) {
-    alert('Application ID required');
-    return;
-  }
-  if (newRow.ruleType === 'MIN ORDER VALUE') {
-    const val = newRow.value.minOrderValue;
-    if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
-      alert('Invalid value for MIN ORDER VALUE');
-      return;
-    }
-  }
-  if (newRow.ruleType === 'AFTER SALES SERVICEABILITY' && typeof newRow.value !== 'boolean') {
-    alert('Value must be true/false');
-    return;
-  }
-
-  showLoader.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  fullData.push({ ...JSON.parse(JSON.stringify(newRow)), editing: false });
-  showLoader.value = false;
-  showModal.value = false;
-};
 
 const isValidPincode = (value) => {
   const pin = String(value).trim();
@@ -217,9 +184,9 @@ const enforceNumeric = (row) => {
 };
 
 const startEditing = (index) => {
-  const row = fullData[index];
-  if (row.ruleType === 'MIN ORDER VALUE') {
-    if (typeof row.value !== 'object' || !row.value.minOrderValue) {
+  const row = fullData.value[index];
+  if (row.ruleType === 'MIN_ORDER_VALUE') {
+    if (typeof row.value !== 'object' || row.value === null) {
       row.value = { minOrderValue: 0 };
     }
   }
@@ -227,7 +194,7 @@ const startEditing = (index) => {
 };
 
 const saveRow = async (index) => {
-  const row = fullData[index];
+  const row = fullData.value[index];
   if (!isValidPincode(row.pincode)) {
     alert('Please enter a valid 6-digit pincode.');
     return;
@@ -236,7 +203,7 @@ const saveRow = async (index) => {
     alert('Application ID cannot be empty.');
     return;
   }
-  if (row.ruleType === 'MIN ORDER VALUE') {
+  if (row.ruleType === 'MIN_ORDER_VALUE') {
     const val = row.value?.minOrderValue;
     if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
       alert('Value must be a 32-bit integer');
@@ -254,9 +221,45 @@ const saveRow = async (index) => {
   showLoader.value = false;
 };
 
+const saveNewRow = async () => {
+  if (!isValidPincode(newRow.value.pincode)) {
+    alert('Invalid pincode');
+    return;
+  }
+  if (!newRow.value.applicationId) {
+    alert('Application ID required');
+    return;
+  }
+  if (newRow.value.ruleType === 'MIN_ORDER_VALUE') {
+    const val = newRow.value.value.minOrderValue;
+    if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
+      alert('Invalid value for MIN_ORDER_VALUE');
+      return;
+    }
+  }
+  if (newRow.value.ruleType === 'AFTER SALES SERVICEABILITY' && typeof newRow.value.value !== 'boolean') {
+    alert('Value must be true/false');
+    return;
+  }
+
+  showLoader.value = true;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  fullData.value.push({
+    pincode: newRow.value.pincode,
+    applicationId: newRow.value.applicationId,
+    status: newRow.value.status,
+    ruleType: newRow.value.ruleType,
+    value: JSON.parse(JSON.stringify(newRow.value.value)),
+    description: newRow.value.description,
+    editing: false
+  });
+  showLoader.value = false;
+  showModal.value = false;
+};
+
 const deleteRow = (index) => {
   if (confirm(`Are you sure you want to delete this pincode?`)) {
-    fullData.splice(index, 1);
+    fullData.value.splice(index, 1);
   }
 };
 
