@@ -211,7 +211,6 @@ onMounted(async () => {
       baseData.forEach((item, index) => {
         multiplied.push({
           ...JSON.parse(JSON.stringify(item)),
-          pincode: item.pincode + String(i).padStart(3, '0'), 
         });
       });
       if (multiplied.length >= 150) break;
