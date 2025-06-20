@@ -22,7 +22,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in fullData" :key="index">
+          <tr v-for="(row, index) in paginatedData" :key="index">
             <td>
               <span v-if="!row.editing">{{ row.pincode }}</span>
               <div v-else>
@@ -44,7 +44,7 @@
             <td>
               <span v-if="!row.editing">{{ row.ruleType }}</span>
               <select v-else v-model="row.ruleType">
-                <option value="MIN_ORDER_VALUE">MIN ORDER VALUE</option>
+                <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
                 <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
               </select>
             </td>
@@ -79,6 +79,20 @@
           </tr>
         </tbody>
       </table>
+      <div class="pagination-controls">
+  <div class="size-selector">
+    <label>Rows per page:</label>
+    <select v-model="pageSize" @change="changePageSize(pageSize)">
+      <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
+    </select>
+  </div>
+  <div class="page-buttons">
+    <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">Previous</button>
+    <span>Page {{ currentPage }} of {{ totalPages }}</span>
+    <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">Next</button>
+  </div>
+</div>
+
     </div>
 
     <div v-if="showModal" class="add-pin-overlay" @click="handleOverlayClick">
@@ -92,7 +106,7 @@
           <option value="Inactive">Inactive</option>
         </select>
         <select v-model="newRow.ruleType">
-          <option value="MIN_ORDER_VALUE">MIN ORDER VALUE</option>
+          <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
           <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
         </select>
         <div class="field-wrapper">
@@ -113,12 +127,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const fullData = ref([]);
 const showLoader = ref(false);
 const showModal = ref(false);
+
+//pagination
+
+const currentPage = ref(1);
+const pageSize = ref(5);
+const pageSizes = [5, 10, 20, 50];
+
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return fullData.value.slice(start, start + pageSize.value);
+});
+
+const totalPages = computed(() => Math.ceil(fullData.value.length / pageSize.value));
+
+const changePageSize = (size) => {
+  pageSize.value = size;
+  currentPage.value = 1;
+};
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+//end pagination
 
 const newRow = ref({
   pincode: '',
@@ -155,24 +194,37 @@ onMounted(async () => {
       }
     });
 
-    const normalizedData = resp.data.map(item => ({
+    const baseData = resp.data.map(item => ({
       ...item,
       status: item.isActive ? 'Active' : 'Inactive',
       value: item.ruleType === 'MIN_ORDER_VALUE'
         ? { minOrderValue: item.value?.minOrderValue ?? null }
         : typeof item.value === 'boolean' ? item.value : null,
-        ruleType: item.ruleType?.trim().toUpperCase(),
+      ruleType: item.ruleType?.trim().toUpperCase(),
       description: item.message ?? '',
       editing: false,
     }));
 
-    fullData.value = normalizedData;
+    // Duplicate the base data 150 times (or close to it)
+    const multiplied = [];
+    for (let i = 0; i < 150; i++) {
+      baseData.forEach((item, index) => {
+        multiplied.push({
+          ...JSON.parse(JSON.stringify(item)),
+          pincode: item.pincode + String(i).padStart(3, '0'), 
+        });
+      });
+      if (multiplied.length >= 150) break;
+    }
+
+    fullData.value = multiplied.slice(0, 150); 
   } catch (e) {
     console.error('Fetch failed', e);
   } finally {
     showLoader.value = false;
   }
 });
+
 
 const isValidPincode = (value) => {
   const pin = String(value).trim();
@@ -429,5 +481,33 @@ input[type='number']::-webkit-outer-spin-button {
 }
 input[type='number'] {
   -moz-appearance: textfield;
+}
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 8px 0;
+  color: white;
+}
+.size-selector select {
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+.page-buttons button {
+  padding: 6px 12px;
+  margin: 0 4px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #184658;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.page-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
