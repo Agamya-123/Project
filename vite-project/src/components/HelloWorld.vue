@@ -43,9 +43,9 @@
             </td>
             <td>
               <span v-if="!row.editing">{{ row.ruleType }}</span>
-              <select v-else v-model="row.ruleType">
+              <select v-else v-model="row.ruleType" @change="handleRuleTypeChange(row)">
                 <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
-                <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
+                <option value="AFTER_SALES_SERVICEABILITY">AFTER_SALES_SERVICEABILITY</option>
               </select>
             </td>
             <td>
@@ -58,7 +58,7 @@
                 </template>
               </span>
               <template v-else>
-                <select v-if="row.ruleType === 'AFTER SALES SERVICEABILITY'" v-model="row.value">
+                <select v-if="row.ruleType === 'AFTER_SALES_SERVICEABILITY'" v-model="row.value">
                   <option :value="true">True</option>
                   <option :value="false">False</option>
                 </select>
@@ -107,7 +107,7 @@
         </select>
         <select v-model="newRow.ruleType">
           <option value="MIN_ORDER_VALUE">MIN_ORDER_VALUE</option>
-          <option value="AFTER SALES SERVICEABILITY">AFTER SALES SERVICEABILITY</option>
+          <option value="AFTER_SALES_SERVICEABILITY">AFTER_SALES_SERVICEABILITY</option>
         </select>
         <div class="field-wrapper">
           <input v-if="newRow.ruleType === 'MIN_ORDER_VALUE'" type="number" v-model.number="newRow.value.minOrderValue" placeholder="Enter Value" />
@@ -204,8 +204,6 @@ onMounted(async () => {
       description: item.message ?? '',
       editing: false,
     }));
-
-    // Duplicate the base data 150 times (or close to it)
     const multiplied = [];
     for (let i = 0; i < 150; i++) {
       baseData.forEach((item, index) => {
@@ -236,34 +234,47 @@ const enforceNumeric = (row) => {
 
 const startEditing = (index) => {
   const row = fullData.value[index];
+
   if (row.ruleType === 'MIN_ORDER_VALUE') {
-    if (typeof row.value !== 'object' || row.value === null) {
-      row.value = { minOrderValue: 0 };
+    if (typeof row.value !== 'object' || row.value === null || !('minOrderValue' in row.value)) {
+      row.value = { minOrderValue: null };
     }
+  } else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+    row.value = typeof row.value === 'boolean' ? row.value : false;
   }
+
+  row._originalRuleType = row.ruleType; 
   row.editing = true;
 };
 
 const saveRow = async (index) => {
   const row = fullData.value[index];
+
   if (!isValidPincode(row.pincode)) {
     alert('Please enter a valid 6-digit pincode.');
     return;
   }
+
   if (!row.applicationId) {
     alert('Application ID cannot be empty.');
     return;
   }
+
   if (row.ruleType === 'MIN_ORDER_VALUE') {
-    const val = row.value?.minOrderValue;
-    if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
-      alert('Value must be a 32-bit integer');
+  if (typeof row.value !== 'object' || row.value === null || !('minOrderValue' in row.value)) {
+    row.value = { minOrderValue: parseInt(row.value?.minOrderValue) || null };
+  }
+} else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+  if (typeof row.value !== 'boolean') {
+    row.value = false;
+  }
+}
+
+  if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+    if (typeof row.value !== 'boolean') {
+      alert('Value must be true or false');
       return;
     }
-  }
-  if (row.ruleType === 'AFTER SALES SERVICEABILITY' && typeof row.value !== 'boolean') {
-    alert('Value must be true or false');
-    return;
   }
 
   showLoader.value = true;
@@ -288,7 +299,7 @@ const saveNewRow = async () => {
       return;
     }
   }
-  if (newRow.value.ruleType === 'AFTER SALES SERVICEABILITY' && typeof newRow.value.value !== 'boolean') {
+  if (newRow.value.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof newRow.value.value !== 'boolean') {
     alert('Value must be true/false');
     return;
   }
@@ -317,6 +328,15 @@ const deleteRow = (index) => {
 const handleOverlayClick = () => {
   showModal.value = false;
 };
+
+const handleRuleTypeChange = (row) => {
+  if (row.ruleType === 'MIN_ORDER_VALUE') {
+    row.value = { minOrderValue: null };
+  } else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+    row.value = true;
+  }
+};
+
 </script>
 
 <style scoped>
