@@ -71,8 +71,8 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button class="edit-btn" v-if="!row.editing" @click="startEditing(index)">Edit</button>
-                <button class="save-btn" v-else @click="saveRow(index)">Save</button>
+                <button class="edit-btn" v-if="!row.editing" @click="startEditingRow(row)">Edit</button>
+                <button class="save-btn" v-else @click="saveRow(row)">Save</button>
                 <button class="delete-btn" @click="deleteRow(index)">Delete</button>
               </div>
             </td>
@@ -133,31 +133,6 @@ import axios from 'axios';
 const fullData = ref([]);
 const showLoader = ref(false);
 const showModal = ref(false);
-
-//pagination
-
-const currentPage = ref(1);
-const pageSize = ref(5);
-const pageSizes = [5, 10, 20, 50];
-
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return fullData.value.slice(start, start + pageSize.value);
-});
-
-const totalPages = computed(() => Math.ceil(fullData.value.length / pageSize.value));
-
-const changePageSize = (size) => {
-  pageSize.value = size;
-  currentPage.value = 1;
-};
-
-const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-  }
-};
-//end pagination
 
 const newRow = ref({
   pincode: '',
@@ -232,24 +207,22 @@ const enforceNumeric = (row) => {
   row.pincode = row.pincode.replace(/\D/g, '').slice(0, 6);
 };
 
-const startEditing = (index) => {
-  const row = fullData.value[index];
-
+const startEditingRow = (row) => {
   if (row.ruleType === 'MIN_ORDER_VALUE') {
-    if (typeof row.value !== 'object' || row.value === null || !('minOrderValue' in row.value)) {
-      row.value = { minOrderValue: null };
-    }
+    row.value = typeof row.value === 'object' && row.value !== null && 'minOrderValue' in row.value
+      ? row.value
+      : { minOrderValue: null };
   } else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
     row.value = typeof row.value === 'boolean' ? row.value : false;
   }
 
-  row._originalRuleType = row.ruleType; 
+  row._originalRuleType = row.ruleType;
   row.editing = true;
 };
 
-const saveRow = async (index) => {
-  const row = fullData.value[index];
 
+
+const saveRow = async (row) => {
   if (!isValidPincode(row.pincode)) {
     alert('Please enter a valid 6-digit pincode.');
     return;
@@ -261,16 +234,10 @@ const saveRow = async (index) => {
   }
 
   if (row.ruleType === 'MIN_ORDER_VALUE') {
-  if (typeof row.value !== 'object' || row.value === null || !('minOrderValue' in row.value)) {
-    row.value = { minOrderValue: parseInt(row.value?.minOrderValue) || null };
-  }
-} else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
-  if (typeof row.value !== 'boolean') {
-    row.value = false;
-  }
-}
-
-  if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+    if (typeof row.value !== 'object' || row.value === null || !('minOrderValue' in row.value)) {
+      row.value = { minOrderValue: parseInt(row.value?.minOrderValue) || null };
+    }
+  } else if (row.ruleType === 'AFTER_SALES_SERVICEABILITY') {
     if (typeof row.value !== 'boolean') {
       alert('Value must be true or false');
       return;
@@ -279,9 +246,11 @@ const saveRow = async (index) => {
 
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
+
   row.editing = false;
   showLoader.value = false;
 };
+
 
 const saveNewRow = async () => {
   if (!isValidPincode(newRow.value.pincode)) {
@@ -292,32 +261,41 @@ const saveNewRow = async () => {
     alert('Application ID required');
     return;
   }
+
+  let structuredValue = null;
+
   if (newRow.value.ruleType === 'MIN_ORDER_VALUE') {
     const val = newRow.value.value.minOrderValue;
     if (!Number.isInteger(val) || val < -2147483648 || val > 2147483647) {
       alert('Invalid value for MIN_ORDER_VALUE');
       return;
     }
-  }
-  if (newRow.value.ruleType === 'AFTER_SALES_SERVICEABILITY' && typeof newRow.value.value !== 'boolean') {
-    alert('Value must be true/false');
-    return;
+    structuredValue = { minOrderValue: val };
+  } else if (newRow.value.ruleType === 'AFTER_SALES_SERVICEABILITY') {
+    if (typeof newRow.value.value !== 'boolean') {
+      alert('Value must be true/false');
+      return;
+    }
+    structuredValue = newRow.value.value;
   }
 
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
+
   fullData.value.push({
     pincode: newRow.value.pincode,
     applicationId: newRow.value.applicationId,
     status: newRow.value.status,
-    ruleType: newRow.value.ruleType,
-    value: JSON.parse(JSON.stringify(newRow.value.value)),
-    description: newRow.value.description,
+    ruleType: newRow.value.ruleType.trim().toUpperCase(),
+    value: structuredValue,
+    description: newRow.value.description ?? '',
     editing: false
   });
+
   showLoader.value = false;
   showModal.value = false;
 };
+
 
 const deleteRow = (index) => {
   if (confirm(`Are you sure you want to delete this pincode?`)) {
@@ -328,6 +306,31 @@ const deleteRow = (index) => {
 const handleOverlayClick = () => {
   showModal.value = false;
 };
+
+//pagination
+
+const currentPage = ref(1);
+const pageSize = ref(5);
+const pageSizes = [5, 10, 20, 50];
+
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return fullData.value.slice(start, start + pageSize.value);
+});
+
+const totalPages = computed(() => Math.ceil(fullData.value.length / pageSize.value));
+
+const changePageSize = (size) => {
+  pageSize.value = size;
+  currentPage.value = 1;
+};
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+//end pagination
 
 const handleRuleTypeChange = (row) => {
   if (row.ruleType === 'MIN_ORDER_VALUE') {
