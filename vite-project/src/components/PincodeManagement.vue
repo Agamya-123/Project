@@ -344,158 +344,390 @@ const handleRuleTypeChange = (row) => {
 
 <style scoped>
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  margin: 0;
+  padding: 0;
+  color: #fff;
 }
+
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 999;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: 24px 32px;
+  margin-bottom: 24px;
 }
+
 .heading {
-  font-size: 28px;
-  font-weight: 800;
-  color: rgb(223, 223, 223);
+  font-size: 32px;
+  font-weight: 900;
+  color: #00b4d8;
 }
+
+/* add pincode button */
 .primary-button {
-  background: linear-gradient(135deg, #184658, #286f8a);
-  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  color:  #0a2540;
   padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(1);
 }
+
 .primary-button:hover {
-  opacity: 0.9;
+  background: rgba(0, 180, 216, 0.3);
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
 }
+
+/* table  */
 .wrapper {
   margin-top: 20px;
-  overflow-x: auto;
+  padding: 0 16px;
 }
+
 .pincode-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: black;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  overflow: hidden;
 }
+
 th, td {
   padding: 16px;
   text-align: left;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 15px;
-  color: white;
+  color: #e0e0e0;
 }
+
 th {
-  background-color: #184658;
+  background-color: rgba(24, 70, 88, 0.6);
+  color: #fff;
+  font-weight: 600;
 }
+
 input, select {
   width: 100%;
   padding: 12px;
   font-size: 15px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  background-color: #f9f9f9;
-  color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transition: 0.3s;
 }
+
+input::placeholder {
+  color: #ccc;
+}
+
+input:focus, select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.4);
+}
+
 .action-buttons {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
+/* edit/save and delete button */
 .edit-btn, .save-btn, .delete-btn {
-  padding: 8px 12px;
+  padding: 8px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
+  backdrop-filter: blur(6px);
+  transition: all 0.3s ease;
+  transform: scale(1);
 }
+
 .edit-btn {
-  background-color: #2196f3;
-  color: #212121;
+  background: rgba(0, 180, 216, 0.3);
+  color: #fff;
+  border: 1px solid rgba(0, 180, 216, 0.6);
 }
+
+.edit-btn:hover {
+  background: rgba(0, 180, 216, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
+}
+
 .save-btn {
-  background-color: #4caf50;
-  color: white;
+  background: rgba(0, 200, 83, 0.3);
+  color: #fff;
+  border: 1px solid rgba(0, 200, 83, 0.6);
 }
+
+.save-btn:hover {
+  background: rgba(0, 200, 83, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 200, 83, 0.4);
+}
+
 .delete-btn {
-  background-color: #f44336;
-  color: white;
+  background: rgba(244, 67, 54, 0.3);
+  color: #fff;
+  border: 1px solid rgba(244, 67, 54, 0.6);
 }
+
+.delete-btn:hover {
+  background: rgba(244, 67, 54, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+/* Pagination */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 32px 0 16px;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.size-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.size-selector label {
+  white-space: nowrap;
+}
+
+.size-selector select {
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.size-selector select:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.page-buttons button {
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  background-color: rgba(0, 180, 216, 0.3);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  backdrop-filter: blur(6px);
+}
+
+.page-buttons button:hover {
+  background-color: rgba(0, 180, 216, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 3px 12px rgba(0, 180, 216, 0.4);
+}
+
+.page-buttons button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/*  modal overlay */
 .add-pin-overlay {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   padding: 16px;
 }
+
 .add-pin-content {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 500px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 32px 28px;
   width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  color: #fff;
 }
+
 .add-pin-content h3 {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 28px;
+  font-weight: 800;
   text-align: center;
-  color: #184658;
+  color: #ffffff;
+  margin-bottom: 8px;
 }
+
+/* Wrapper to keep input + error aligned */
+.add-pin-content input,
+.add-pin-content select {
+  background: rgba(255, 255, 255, 0.25);
+  color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.add-pin-content input::placeholder {
+  color: #333;
+}
+
+.add-pin-content input:focus,
+.add-pin-content select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(24, 70, 88, 0.3);
+}
+
+.add-pin-content small.error {
+  font-size: 13px;
+  color: #f44336;
+  margin-top: -4px;
+  margin-bottom: -4px;
+  padding-left: 4px;
+}
+
+/* Group fields neatly */
+.add-pin-content > input,
+.add-pin-content > select,
+.add-pin-content > .field-wrapper,
+.add-pin-content > small {
+  margin-top: 0px;
+}
+
+/* Modal footer buttons */
 .app-pin-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-top: 8px;
 }
-.cancel-button {
-  background-color: #dee2e6;
-  color: #212529;
-  border: 1px solid #adb5bd;
-  border-radius: 6px;
+
+.app-pin-footer .primary-button,
+.app-pin-footer .cancel-button {
+  border: none;
+  padding: 10px 18px;
   font-weight: bold;
-  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(6px);
+  transform: scale(1);
 }
-.error {
-  color: red;
-  font-size: 13px;
-  margin-top: 4px;
+
+.app-pin-footer .primary-button {
+  background: rgba(24, 70, 88, 0.4);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
+
+.app-pin-footer .primary-button:hover {
+  background: rgba(24, 70, 88, 0.6);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(24, 70, 88, 0.4);
+}
+
+.app-pin-footer .cancel-button {
+  background: rgba(255, 255, 255, 0.4);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.app-pin-footer .cancel-button:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+/* Loader */
 .loader-overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(255, 255, 255, 0.85);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 999;
 }
+
 .loader {
-  border: 6px solid #f3f3f3;
-  border-top: 6px solid #184658;
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  border-top: 6px solid #00b4d8;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+/* disable spinner */
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -503,33 +735,5 @@ input[type='number']::-webkit-outer-spin-button {
 }
 input[type='number'] {
   -moz-appearance: textfield;
-}
-.pagination-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding: 8px 0;
-  color: white;
-}
-.size-selector select {
-  padding: 6px;
-  font-size: 14px;
-  border-radius: 4px;
-}
-.page-buttons button {
-  padding: 6px 12px;
-  margin: 0 4px;
-  font-size: 14px;
-  font-weight: bold;
-  background-color: #184658;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.page-buttons button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>
