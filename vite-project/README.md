@@ -49,8 +49,8 @@ A modern Vue.js 3-based frontend for managing pincodes with enhanced UX, glassmo
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/pincode-management-ui.git
-cd pincode-management-ui
+git clone https://github.com/Agamya-123/Project
+cd vite-project
 ````
 
 ### 2. Install Dependencies
