@@ -282,7 +282,7 @@ const saveNewRow = async () => {
   showLoader.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  fullData.value.push({
+  fullData.value.unshift({
     pincode: newRow.value.pincode,
     applicationId: newRow.value.applicationId,
     status: newRow.value.status,
@@ -291,7 +291,7 @@ const saveNewRow = async () => {
     description: newRow.value.description ?? '',
     editing: false
   });
-
+  currentPage.value = 1;
   showLoader.value = false;
   showModal.value = false;
 };

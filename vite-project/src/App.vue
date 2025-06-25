@@ -1,11 +1,10 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import PincodeManagement from './components/PincodeManagement.vue';
 </script>
 
 <template>
-  <HelloWorld/>
+  <PincodeManagement/>
 </template>
 
 <style scoped>
-
 </style>
