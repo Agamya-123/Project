@@ -2,7 +2,7 @@
   <div>
     <div v-if="showLoader" class="loader-overlay">
       <div class="loader"></div>
-      <p style="color: black; font-weight: 500;">Loading...</p>
+      <p style="color: white; font-weight: 500;">Loading...</p>
     </div>
     <div class="header">
       <span class="heading">Pincode Management</span>
