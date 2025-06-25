@@ -1,4 +1,4 @@
-```markdown
+
 # 🧾 Pincode Management Dashboard
 
 A modern Vue.js 3-based frontend for managing pincodes with enhanced UX, glassmorphism styling, and dynamic pagination. It supports full CRUD operations with API integration, input validation, and loader overlays.
@@ -29,7 +29,7 @@ A modern Vue.js 3-based frontend for managing pincodes with enhanced UX, glassmo
 ## 📂 Project Structure
 
 
-
+```
 .
 ├── src/
 │   ├── components/
@@ -40,7 +40,7 @@ A modern Vue.js 3-based frontend for managing pincodes with enhanced UX, glassmo
 ├── README.md
 └── ...
 
-
+```
 
 ---
 
@@ -51,7 +51,7 @@ A modern Vue.js 3-based frontend for managing pincodes with enhanced UX, glassmo
 ```bash
 git clone https://github.com/Agamya-123/Project
 cd vite-project
-````
+```
 
 ### 2. Install Dependencies
 
