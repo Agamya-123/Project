@@ -108,10 +108,3 @@ Change the header or pincode in `onMounted()` in the component if needed.
 ## 📝 License
 
 MIT © 2025 \Agamya Rathour
-
-```
-
----
-
-You can paste this directly into your `README.md` file. Let me know if you'd like a Markdown badge section or GitHub Actions CI/CD badges added as well.
-```
