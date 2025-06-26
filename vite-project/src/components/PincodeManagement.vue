@@ -5,9 +5,20 @@
       <p style="color: white; font-weight: 500;">Loading...</p>
     </div>
     <div class="header">
-      <span class="heading">Pincode Management</span>
-      <button class="primary-button" @click="openModal">Add New Pincode</button>
-    </div>
+  <span class="heading">Pincode Management</span>
+  <div class="header-actions">
+    <input
+      class="search-input"
+      type="text"
+      v-model="searchPincode"
+      maxlength="6"
+      placeholder="Search Pincode"
+      @input="enforceNumericSearch"
+    />
+    <button class="primary-button" @click="openModal">Add New Pincode</button>
+  </div>
+</div>
+
     <div class="wrapper">
       <table class="pincode-table">
         <thead>
@@ -127,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 
 const fullData = ref([]);
@@ -324,13 +335,6 @@ const currentPage = ref(1);
 const pageSize = ref(5);
 const pageSizes = [5, 10, 20, 50];
 
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return fullData.value.slice(start, start + pageSize.value);
-});
-
-const totalPages = computed(() => Math.ceil(fullData.value.length / pageSize.value));
-
 const changePageSize = (size) => {
   pageSize.value = size;
   currentPage.value = 1;
@@ -350,6 +354,26 @@ const handleRuleTypeChange = (row) => {
     row.value = true;
   }
 };
+
+const searchPincode = ref('');
+watch(searchPincode, () => {
+  currentPage.value = 1;
+});
+const enforceNumericSearch = () => {
+  searchPincode.value = searchPincode.value.replace(/\D/g, '').slice(0, 6);
+};
+const filteredData = computed(() => {
+  if (!searchPincode.value) return fullData.value;
+  return fullData.value.filter(row =>
+    String(row.pincode).includes(searchPincode.value)
+  );
+});
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredData.value.slice(start, start + pageSize.value);
+});
+
+const totalPages = computed(() => Math.ceil(filteredData.value.length / pageSize.value));
 
 </script>
 
@@ -375,12 +399,19 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   padding: 24px 32px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .heading {
   font-size: 32px;
   font-weight: 900;
   color: #00b4d8;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* add pincode button */
@@ -747,5 +778,24 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
+}
+.search-input {
+  width: 220px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: 0.3s ease;
+}
+.search-input::placeholder {
+  color: #ccc;
+}
+
+.search-input:focus {
+  outline: none;
+  background-color: rgba(255,255,255,0.3);
+  box-shadow: 0 0 0 2px rgba(0,180,216,0.4);
 }
 </style>
