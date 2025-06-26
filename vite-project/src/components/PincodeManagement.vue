@@ -164,7 +164,7 @@ onMounted(async () => {
 
     if (useMockData) {
       // Mock API call using JSONPlaceholder
-      const resp = await axios.get('https://jsonplaceholder.typicode.com/posts');
+      const resp = await axios.get('https://json-placeholder.mock.beeceptor.com/todos');
       data = resp.data.slice(0, 10).map((item) => ({
         pincode: String(150000 + item.id).padStart(6, '0'), //make sure pincode is 6 digits
         applicationId: `fs252343gds42323440crr00${item.id}`, // randon application ID
@@ -206,7 +206,6 @@ onMounted(async () => {
     showLoader.value = false;
   }
 });
-
 
 
 
