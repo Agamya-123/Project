@@ -167,7 +167,7 @@ onMounted(async () => {
       const resp = await axios.get('https://json-placeholder.mock.beeceptor.com/todos');
       data = resp.data.slice(0, 10).map((item) => ({
         pincode: String(150000 + item.id).padStart(6, '0'), //make sure pincode is 6 digits
-        applicationId: `fs252343gds42323440crr00${item.id}`, // randon application ID
+        applicationId: `65f437fae78851028707daee${item.id}`, // randon application ID
         status: item.id % 2 === 0 ? 'Active' : 'Inactive', //alternate status
         ruleType: item.id % 2 === 0 ? 'MIN_ORDER_VALUE' : 'AFTER_SALES_SERVICEABILITY', //alternate rule types
         value: item.id % 2 === 0 ? { minOrderValue: Math.floor(Math.random() * 50000) + 5000 } : Math.random() < 0.5, // random value for MIN_ORDER_VALUE or boolean for AFTER_SALES_SERVICEABILITY
