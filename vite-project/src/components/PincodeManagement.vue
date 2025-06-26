@@ -133,6 +133,7 @@ import axios from 'axios';
 const fullData = ref([]);
 const showLoader = ref(false);
 const showModal = ref(false);
+const useMockData = true; // Set to false for real API calls
 
 const newRow = ref({
   pincode: '',
@@ -157,45 +158,56 @@ const openModal = () => {
 
 onMounted(async () => {
   showLoader.value = true;
-  try {
-    const resp = await axios.get('/api/v1/checkoutrules', {
-      params: { pincode: '457777' },
-      headers: {
-        'x-application-data': JSON.stringify({
-          company_id: '17',
-          _id: '65f437fae78851028707daee',
-          applicationId: '65f437fae78851028707daee'
-        })
-      }
-    });
 
-    const baseData = resp.data.map(item => ({
-      ...item,
-      status: item.isActive ? 'Active' : 'Inactive',
-      value: item.ruleType === 'MIN_ORDER_VALUE'
-        ? { minOrderValue: item.value?.minOrderValue ?? null }
-        : typeof item.value === 'boolean' ? item.value : null,
-      ruleType: item.ruleType?.trim().toUpperCase(),
-      description: item.message ?? '',
-      editing: false,
-    }));
-    const multiplied = [];
-    for (let i = 0; i < 150; i++) {
-      baseData.forEach((item, index) => {
-        multiplied.push({
-          ...JSON.parse(JSON.stringify(item)),
-        });
+  try {
+    let data;
+
+    if (useMockData) {
+      // Mock API call using JSONPlaceholder
+      const resp = await axios.get('https://jsonplaceholder.typicode.com/posts');
+      data = resp.data.slice(0, 10).map((item) => ({
+        pincode: String(150000 + item.id).padStart(6, '0'), //make sure pincode is 6 digits
+        applicationId: `fs252343gds42323440crr00${item.id}`, // randon application ID
+        status: item.id % 2 === 0 ? 'Active' : 'Inactive', //alternate status
+        ruleType: item.id % 2 === 0 ? 'MIN_ORDER_VALUE' : 'AFTER_SALES_SERVICEABILITY', //alternate rule types
+        value: item.id % 2 === 0 ? { minOrderValue: Math.floor(Math.random() * 50000) + 5000 } : Math.random() < 0.5, // random value for MIN_ORDER_VALUE or boolean for AFTER_SALES_SERVICEABILITY
+        description: item.title, //description from the api 
+        editing: false
+      }));
+    } else {
+      // Real API call(from postman for now)
+      const resp = await axios.get('/api/v1/checkoutrules', {
+        params: { pincode: '457777' },
+        headers: {
+          'x-application-data': JSON.stringify({
+            company_id: '17',
+            _id: '65f437fae78851028707daee',
+            applicationId: '65f437fae78851028707daee'
+          })
+        }
       });
-      if (multiplied.length >= 150) break;
+
+      data = resp.data.map((item) => ({
+        ...item,
+        status: item.isActive ? 'Active' : 'Inactive',
+        ruleType: item.ruleType?.trim().toUpperCase(),
+        value: item.ruleType === 'MIN_ORDER_VALUE'
+          ? { minOrderValue: item.value?.minOrderValue ?? null }
+          : typeof item.value === 'boolean' ? item.value : null,
+        description: item.message ?? '',
+        editing: false
+      }));
     }
 
-    fullData.value = multiplied.slice(0, 150); 
+    fullData.value = data;
   } catch (e) {
     console.error('Fetch failed', e);
   } finally {
     showLoader.value = false;
   }
 });
+
+
 
 
 const isValidPincode = (value) => {
