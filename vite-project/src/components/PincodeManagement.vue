@@ -745,6 +745,7 @@ input[type='number']::-webkit-outer-spin-button {
   margin: 0;
 }
 input[type='number'] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 </style>
