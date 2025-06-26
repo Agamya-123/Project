@@ -176,7 +176,7 @@ onMounted(async () => {
       }));
     } else {
       // Real API call(from postman for now)
-      const resp = await axios.get('/api/v1/checkoutrules', {
+      const resp = await axios.get('/api/v1/checkoutrules', { // replace with your actual API endpoint (change this to your actual API endpoint from vite.config.js & server.js)
         params: { pincode: '457777' },
         headers: {
           'x-application-data': JSON.stringify({
